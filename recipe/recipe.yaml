@@ -17,7 +17,8 @@ build:
     - install -d ${PREFIX}/lib ${PREFIX}/include
     - install -m 644 _build/libls-hpack.dylib ${PREFIX}/lib/ || install -m 644 _build/libls-hpack.so ${PREFIX}/lib/
     - install -m 644 lshpack.h ${PREFIX}/include/
-  number: 0
+    - install -m 644 lsxpack_header.h ${PREFIX}/include/
+  number: 1
 
 requirements:
   build:

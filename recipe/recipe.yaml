@@ -1,5 +1,5 @@
 context:
-  version: "2.3.4"
+  version: "2.3.5"
 
 package:
   name: ls-hpack
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/litespeedtech/ls-hpack/archive/refs/tags/v${{ version }}.tar.gz
-  sha256: 4abeeb786d6211d0aaf13ef3df7651c765c2ffb58cd226ec5c9e6e8b6d801ca1
+  sha256: 430a1a36029e0ae1c81eaa0b2356920f1e65fde1cdd722351c671ebe513b7a96
 
 build:
   skip: win
@@ -18,7 +18,7 @@ build:
     - install -m 644 _build/libls-hpack.dylib ${PREFIX}/lib/ || install -m 644 _build/libls-hpack.so ${PREFIX}/lib/
     - install -m 644 lshpack.h ${PREFIX}/include/
     - install -m 644 lsxpack_header.h ${PREFIX}/include/
-  number: 1
+  number: 0
 
 requirements:
   build:

@@ -1,0 +1,133 @@
+From 41960c503bd5d36c8a2a838f02f35f3ca8b25e31 Mon Sep 17 00:00:00 2001
+From: Pavel Zwerschke <pavel.zwerschke@quantco.com>
+Date: Wed, 28 Oct 2026 13:09:30 +0100
+Subject: [PATCH] Export public symbols from the Windows DLL
+
+Upstream has no dllexport annotations, so building with SHARED=1 on
+Windows produces a DLL without exported symbols and no import library.
+Annotate the public API with LSHPACK_API, which expands to
+__declspec(dllexport) only when building the shared library on Windows.
+---
+ CMakeLists.txt |  1 +
+ lshpack.h      | 28 +++++++++++++++++-----------
+ 2 files changed, 18 insertions(+), 11 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a970b85..2fba535 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -13,6 +13,7 @@ include(CheckIncludeFiles)
+ 
+ IF (SHARED EQUAL 1)
+     ADD_LIBRARY(ls-hpack SHARED lshpack.c)
++    TARGET_COMPILE_DEFINITIONS(ls-hpack PRIVATE LSHPACK_BUILD_DLL)
+ ELSE()
+     ADD_LIBRARY(ls-hpack STATIC lshpack.c)
+ ENDIF()
+diff --git a/lshpack.h b/lshpack.h
+index b844c5b..a0ba462 100644
+--- a/lshpack.h
++++ b/lshpack.h
+@@ -39,6 +39,12 @@ SOFTWARE.
+ extern "C" {
+ #endif
+ 
++#if defined(_WIN32) && defined(LSHPACK_BUILD_DLL)
++#define LSHPACK_API __declspec(dllexport)
++#else
++#define LSHPACK_API
++#endif
++
+ #define LSHPACK_MAJOR_VERSION 2
+ #define LSHPACK_MINOR_VERSION 3
+ #define LSHPACK_PATCH_VERSION 5
+@@ -134,13 +140,13 @@ enum lshpack_static_hdr_idx
+  * Initialization routine allocates memory.  -1 is returned if memory
+  * could not be allocated.  0 is returned on success.
+  */
+-int
++LSHPACK_API int
+ lshpack_enc_init (struct lshpack_enc *);
+ 
+ /**
+  * Clean up HPACK encoder, freeing all allocated memory.
+  */
+-void
++LSHPACK_API void
+ lshpack_enc_cleanup (struct lshpack_enc *);
+ 
+ /**
+@@ -154,37 +160,37 @@ lshpack_enc_cleanup (struct lshpack_enc *);
+  * @return The (possibly advanced) dst pointer.  If the destination
+  * pointer was not advanced, an error must have occurred.
+  */
+-unsigned char *
++LSHPACK_API unsigned char *
+ lshpack_enc_encode (struct lshpack_enc *henc, unsigned char *dst,
+         unsigned char *dst_end, struct lsxpack_header *input);
+ 
+-void
++LSHPACK_API void
+ lshpack_enc_set_max_capacity (struct lshpack_enc *, unsigned);
+ 
+ /**
+  * Turn history on or off.  Turning history on may fail (malloc), in
+  * which case -1 is returned.
+  */
+-int
++LSHPACK_API int
+ lshpack_enc_use_hist (struct lshpack_enc *, int on);
+ 
+ /**
+  * Return true if history is used, false otherwise.  By default,
+  * history is off.
+  */
+-int
++LSHPACK_API int
+ lshpack_enc_hist_used (const struct lshpack_enc *);
+ 
+ /**
+  * Initialize HPACK decoder structure.
+  */
+-void
++LSHPACK_API void
+ lshpack_dec_init (struct lshpack_dec *);
+ 
+ /**
+  * Clean up HPACK decoder structure, freeing all allocated memory.
+  */
+-void
++LSHPACK_API void
+ lshpack_dec_cleanup (struct lshpack_dec *);
+ 
+ /*
+@@ -196,7 +202,7 @@ lshpack_dec_cleanup (struct lshpack_dec *);
+  * To calculate number of bytes written to the output buffer:
+  *  output->name_len + output->val_len + lshpack_dec_extra_bytes(dec)
+  */
+-int
++LSHPACK_API int
+ lshpack_dec_decode (struct lshpack_dec *dec,
+     const unsigned char **src, const unsigned char *src_end,
+     struct lsxpack_header *output);
+@@ -210,7 +216,7 @@ lshpack_dec_decode (struct lshpack_dec *dec,
+ #define lshpack_dec_extra_bytes(dec_) (0)
+ #endif
+ 
+-void
++LSHPACK_API void
+ lshpack_dec_set_max_capacity (struct lshpack_dec *, unsigned);
+ 
+ /* Some internals follow.  Struct definitions are exposed to save a malloc.
+@@ -289,7 +295,7 @@ struct lshpack_dec
+ };
+ 
+ /* This function may update hash values and flags */
+-unsigned
++LSHPACK_API unsigned
+ lshpack_enc_get_stx_tab_id (struct lsxpack_header *);
+ 
+ #ifdef __cplusplus
+-- 
+2.56.0
+

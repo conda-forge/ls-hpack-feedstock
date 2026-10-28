@@ -8,17 +8,11 @@ package:
 source:
   url: https://github.com/litespeedtech/ls-hpack/archive/refs/tags/v${{ version }}.tar.gz
   sha256: 430a1a36029e0ae1c81eaa0b2356920f1e65fde1cdd722351c671ebe513b7a96
+  patches:
+    - patches/0001-Use-bundled-queue.h-on-Windows.patch
 
 build:
-  skip: win
-  script:
-    - cmake -B _build -G Ninja ${CMAKE_ARGS} -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSHARED=1 -DLSHPACK_XXH=1 .
-    - cmake --build _build
-    - install -d ${PREFIX}/lib ${PREFIX}/include
-    - install -m 644 _build/libls-hpack.dylib ${PREFIX}/lib/ || install -m 644 _build/libls-hpack.so ${PREFIX}/lib/
-    - install -m 644 lshpack.h ${PREFIX}/include/
-    - install -m 644 lsxpack_header.h ${PREFIX}/include/
-  number: 0
+  number: 1
 
 requirements:
   build:
@@ -33,6 +27,23 @@ tests:
   - package_contents:
       lib:
         - ls-hpack
+      include:
+        - lshpack.h
+        - lsxpack_header.h
+  - files:
+      recipe:
+        - test.c
+    requirements:
+      build:
+        - ${{ compiler('c') }}
+    script:
+      - if: win
+        then:
+          - cl /nologo test.c /I%LIBRARY_INC% /link /LIBPATH:%LIBRARY_LIB% ls-hpack.lib
+          - test.exe
+        else:
+          - $CC $CFLAGS test.c -I$PREFIX/include $LDFLAGS -L$PREFIX/lib -lls-hpack -Wl,-rpath,$PREFIX/lib -o test
+          - ./test
 
 about:
   homepage: https://github.com/litespeedtech/ls-hpack

@@ -7,14 +7,17 @@ if errorlevel 1 exit 1
 cmake -B _build -G Ninja %CMAKE_ARGS% ^
     -DCMAKE_BUILD_TYPE=Release ^
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ^
+    -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON ^
     -DSHARED=1 ^
     -DLSHPACK_XXH=1 ^
     .
 if errorlevel 1 exit 1
-cmake --build _build -v
+cmake --build _build
 if errorlevel 1 exit 1
-dir /s /b _build
-dumpbin /exports _build\ls-hpack.dll
+
+if not exist %LIBRARY_BIN% mkdir %LIBRARY_BIN%
+if not exist %LIBRARY_LIB% mkdir %LIBRARY_LIB%
+if not exist %LIBRARY_INC% mkdir %LIBRARY_INC%
 
 copy _build\ls-hpack.dll %LIBRARY_BIN%\
 if errorlevel 1 exit 1

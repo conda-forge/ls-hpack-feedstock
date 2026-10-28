@@ -1,0 +1,49 @@
+From 111cbb7f45ceba34163264d20fa07fcf07ba8c8c Mon Sep 17 00:00:00 2001
+From: Pavel Zwerschke <pavel.zwerschke@quantco.com>
+Date: Wed, 28 Oct 2026 13:40:15 +0100
+Subject: [PATCH] Add install rules
+
+Upstream does not define any install() rules, so cmake --install is a
+no-op. Install the library and public headers, and on Windows also the
+bundled lshpack_queue.h that lshpack.h needs there.
+---
+ CMakeLists.txt | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a970b85..d8e1aeb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -42,6 +42,13 @@ IF (MSVC)
+     INCLUDE_DIRECTORIES(compat/windows)
+ ENDIF()
+ 
++IF (WIN32)
++    # lshpack.h includes lshpack_queue.h on Windows, which has no sys/queue.h
++    CONFIGURE_FILE(compat/queue/sys/queue.h
++        ${CMAKE_BINARY_DIR}/lshpack_queue.h COPYONLY)
++    INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
++ENDIF()
++
+ IF (CMAKE_C_COMPILER_ID STREQUAL GNU
+ 	OR CMAKE_C_COMPILER_ID STREQUAL Clang)
+ 	SET(MY_CMAKE_FLAGS "${MY_CMAKE_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+@@ -88,3 +95,15 @@ ENDIF()
+ IF (CMAKE_SYSTEM_NAME STREQUAL Linux)
+     ADD_SUBDIRECTORY(bin)
+ ENDIF()
++
++INCLUDE(GNUInstallDirs)
++INSTALL(TARGETS ls-hpack
++    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
++INSTALL(FILES lshpack.h lsxpack_header.h
++    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
++IF (WIN32)
++    INSTALL(FILES ${CMAKE_BINARY_DIR}/lshpack_queue.h
++        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
++ENDIF()
+-- 
+2.56.0
+

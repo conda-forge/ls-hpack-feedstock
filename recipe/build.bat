@@ -11,8 +11,10 @@ cmake -B _build -G Ninja %CMAKE_ARGS% ^
     -DLSHPACK_XXH=1 ^
     .
 if errorlevel 1 exit 1
-cmake --build _build
+cmake --build _build -v
 if errorlevel 1 exit 1
+dir /s /b _build
+dumpbin /exports _build\ls-hpack.dll
 
 copy _build\ls-hpack.dll %LIBRARY_BIN%\
 if errorlevel 1 exit 1
